@@ -72,10 +72,44 @@ aws ec2 authorize-security-group-ingress --group-id sg-01180c5c5f5e5f47e --proto
 aws ec2 run-instances --image-id ami-0747bdcabd34c712a --count 1 --instance-type t2.micro --key-name hacksk --security-group-ids sg-01180c5c5f5e5f47e --subnet-id subnet-0f7a06afdba91d01d
 
 
+####create a Network Acl####
+aws ec2 create-network-acl --vpc-id vpc-005b33317afc49b97
+
+###This example creates an entry for the specified network ACL. The rule allows ingress traffic from any IPv4 address (0.0.0.0/0) on UDP port 53 (DNS) into any associated subnet.####
+
+aws ec2 create-network-acl-entry --network-acl-id acl-00ef1d4d9cf66676a --ingress --rule-number 100 --protocol udp --port-range From=53,To=53 --cidr-block 0.0.0.0/0 --rule-action allow
+
+###This example creates a rule for the specified network ACL that allows ingress traffic from any IPv6 address (::/0) on TCP port 80 (HTTP).######
+
+aws ec2 create-network-acl-entry --network-acl-id acl-00ef1d4d9cf66676a --ingress --rule-number 120 --protocol tcp --port-range From=80,To=80 --ipv6-cidr-block ::/0 --rule-action allow
+
+#####To replace the network ACL associated with a subnet####
+
+aws ec2 replace-network-acl-association --association-id aclassoc-02c2f15d50b4f01fc --network-acl-id acl-00ef1d4d9cf66676a
+
+####To create a launch template#####
+aws ec2 create-launch-template --launch-template-name my-template-for-auto-scaling --version-description version1 --launch-template-data "ImageId"="ami-0747bdcabd34c712a","InstanceType"="t2.micro","KeyName"="hacksk"
+
+####To create a load balancer###
+aws elb create-load-balancer --load-balancer-name my-load-balancer --listeners "Protocol=HTTP,LoadBalancerPort=80,InstanceProtocol=HTTP,InstancePort=80" --subnets subnet-0f42b9a49a9275a38 --security-groups sg-0e134165fa8cc1243
+
+#####To create a target group####
+aws elbv2 create-target-group --name my-targets --protocol HTTP --port 80 --target-type instance --vpc-id vpc-005b33317afc49b97
 
 
+###To create an autoscaling group####
+aws autoscaling create-auto-scaling-group --auto-scaling-group-name my-asg --launch-template LaunchTemplateId=lt-061af616867f52e75 --target-group-arns arn:aws:elasticloadbalancing:us-east-1:184039995920:targetgroup/my-targets/7318d00e446d6428 --health-check-type ELB --health-check-grace-period 600 --min-size 1 --max-size 5 --vpc-zone-identifier "subnet-0f42b9a49a9275a38"
+
+###To create a EBS Volume###
+aws ec2 create-volume --volume-type gp2 --size 80 --availability-zone us-east-1a
 
 
+####To attach EBS Volume to an Instance####
+aws ec2 attach-volume --volume-id vol-0a8684d0d4d2f6ffc --instance-id i-025217c0dc2f785cb --device /dev/sdf
 
 
+####To get the alarm details####
+aws cloudwatch describe-alarms --alarm-names "myalarm"
 
+###To create a tag####
+aws ec2 create-tags  --resources i-025217c0dc2f785cb --tags Key=Name,Value=Instance1
